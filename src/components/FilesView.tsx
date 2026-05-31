@@ -50,14 +50,7 @@ export default function FilesView() {
     { id: 'maintenance', name: 'Maintenance Log pdfs' }
   ]);
 
-  const [files, setFiles] = useState<MockFile[]>([
-    { id: 'f1', name: 'lease_agreement_V1_kutch.pdf', folderId: 'leases', tags: ['Active', 'SaaS Contract'], author: 'philly', size: '2.4 MB', date: '2026-05-30 14:22', docType: 'pdf' },
-    { id: 'f2', name: 'driver_license_precious_t.png', folderId: 'kyc', tags: ['Identity', 'KYC Verified'], author: 'hq_admin', size: '1.2 MB', date: '2026-05-28 09:10', docType: 'png' },
-    { id: 'f3', name: 'bmw_650i_scratch_report.pdf', folderId: 'claims', tags: ['Damage Claims', 'PHL-850A'], author: 'philly', size: '850 KB', date: '2026-05-25 11:05', docType: 'pdf' },
-    { id: 'f4', name: 'preventative_volvo_850_brakes.pdf', folderId: 'maintenance', tags: ['Maintenance', 'OBD Warning'], author: 'telematics_bot', size: '1.8 MB', date: '2026-05-20 17:45', docType: 'pdf' },
-    { id: 'f5', name: 'rental_waiver_lucas_f.pdf', folderId: 'leases', tags: ['Active', 'Digital Sign'], author: 'booking_desk', size: '640 KB', date: '2026-05-31 10:15', docType: 'pdf' },
-    { id: 'f6', name: 'odometer_unverified_renault.png', folderId: 'unsorted', tags: ['Audit Needed'], author: 'philly', size: '1.5 MB', date: '2026-05-31 16:40', docType: 'png' }
-  ]);
+  const [files, setFiles] = useState<MockFile[]>([]);
 
   const [selectedFolderId, setSelectedFolderId] = useState<string>('leases');
   const [searchTerm, setSearchTerm] = useState('');

@@ -29,13 +29,7 @@ interface CommissionLedger {
 }
 
 export default function CommissionsView() {
-  const [ledgers, setLedgers] = useState<CommissionLedger[]>([
-    { id: 'COM-901', reservationId: '101', partnerName: 'Expedia Group LLC', bookingTotal: 1850.00, rateValue: 12.5, commissionType: 'Percentage', calculatedDue: 231.25, accrualDate: '2026-05-30 18:22', reconciliationStatus: 'Accrued' },
-    { id: 'COM-902', reservationId: '102', partnerName: 'RentalCars.com Connect', bookingTotal: 2500.00, rateValue: 10.0, commissionType: 'Percentage', calculatedDue: 250.00, accrualDate: '2026-05-31 11:10', reconciliationStatus: 'Accrued' },
-    { id: 'COM-903', reservationId: '103', partnerName: 'Philly Center City Hotel Assoc.', bookingTotal: 640.00, rateValue: 50.0, commissionType: 'Fixed Fee', calculatedDue: 50.00, accrualDate: '2026-05-24 16:15', reconciliationStatus: 'Settled' },
-    { id: 'COM-904', reservationId: '104', partnerName: 'Booking Alliance Group', bookingTotal: 500.00, rateValue: 15.0, commissionType: 'Percentage', calculatedDue: 75.00, accrualDate: '2026-05-28 14:05', reconciliationStatus: 'Disputed' },
-    { id: 'COM-905', reservationId: '105', partnerName: 'Expedia Group LLC', bookingTotal: 1200.00, rateValue: 12.5, commissionType: 'Percentage', calculatedDue: 150.00, accrualDate: '2026-05-20 09:40', reconciliationStatus: 'Waived' }
-  ]);
+  const [ledgers, setLedgers] = useState<CommissionLedger[]>([]);
 
   const [activeTab, setActiveTab] = useState<'All' | 'Accrued' | 'Settled' | 'Disputed' | 'Waived'>('All');
   const [searchTerm, setSearchTerm] = useState('');

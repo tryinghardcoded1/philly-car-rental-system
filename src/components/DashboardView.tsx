@@ -45,6 +45,18 @@ export default function DashboardView({
   // Simulated GPS trace coordinates on a canvas-style map element
   const [gpsDotOffset, setGpsDotOffset] = useState({ x: 120, y: 70 });
 
+  // Sync selected telemetry vehicle when list of vehicles changes
+  useEffect(() => {
+    if (vehicles.length > 0) {
+      const exists = vehicles.find(v => v.id === selectedTelemetryVehicle.id);
+      if (!exists) {
+        setSelectedTelemetryVehicle(vehicles[0]);
+      }
+    } else {
+      setSelectedTelemetryVehicle({} as Vehicle);
+    }
+  }, [vehicles, selectedTelemetryVehicle.id]);
+
   useEffect(() => {
     if (!selectedTelemetryVehicle || !selectedTelemetryVehicle.id) return;
     setLiveSpeed(selectedTelemetryVehicle.telemetryStream?.[0]?.speed || 40);
@@ -264,104 +276,118 @@ export default function DashboardView({
                 <h2 className="text-lg font-bold text-slate-900 font-sans">Live OBD Diagnostics</h2>
               </div>
               {/* Selector */}
-              <select 
-                value={selectedTelemetryVehicle.id}
-                onChange={(e) => {
-                  const found = vehicles.find(v => v.id === e.target.value);
-                  if (found) setSelectedTelemetryVehicle(found);
-                }}
-                className="text-xs bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-slate-700 font-sans focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                {vehicles.map(v => (
-                  <option key={v.id} value={v.id}>
-                    {v.id === 'V5' ? `⚠️ ${v.model}` : v.model}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Simulated Live Display */}
-            <div className="mt-5 space-y-4">
-              
-              {/* Styled Mock Vector GPS Map box */}
-              <div className="bg-slate-950 h-44 rounded-xl relative overflow-hidden flex flex-col justify-between p-3 border border-slate-800">
-                {/* Simulated contour design elements representing street grid */}
-                <svg className="absolute inset-0 w-full h-full text-slate-900/30 opacity-60" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M0,20 Q120,40 300,10 M40,0 L80,180 M220,0 L200,180 M0,100 L300,130" stroke="currentColor" strokeWidth="2" fill="none" />
-                  <circle cx="100" cy="50" r="40" stroke="currentColor" strokeWidth="1" strokeDasharray="3" fill="none" />
-                  <circle cx="200" cy="110" r="60" stroke="currentColor" strokeWidth="1" strokeDasharray="3" fill="none" />
-                </svg>
-
-                <div className="z-10 flex justify-between items-start">
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono leading-none bg-emerald-500/20 text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                      GPS STREAM ACTIVE
-                    </span>
-                    <h4 className="text-white text-xs font-semibold mt-1 font-sans">{selectedTelemetryVehicle.model}</h4>
-                    <span className="text-[10px] text-slate-400 font-mono tracking-tight">{selectedTelemetryVehicle.licensePlate}</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded border border-blue-900/40">
-                    Philly Center-City
-                  </span>
-                </div>
-
-                {/* Animated Vehicle Location Node on Vector Map */}
-                <div 
-                  className="absolute transition-all duration-1000 ease-in-out"
-                  style={{ left: `${gpsDotOffset.x}px`, top: `${gpsDotOffset.y}px` }}
+              {vehicles.length > 0 && (
+                <select 
+                  value={selectedTelemetryVehicle.id || ''}
+                  onChange={(e) => {
+                    const found = vehicles.find(v => v.id === e.target.value);
+                    if (found) setSelectedTelemetryVehicle(found);
+                  }}
+                  className="text-xs bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-slate-700 font-sans focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <div className="w-4 h-4 rounded-full bg-blue-500/40 border border-blue-400 flex items-center justify-center animate-pulse">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
-                  </div>
-                  <div className="absolute top-4 left-4 bg-slate-900/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap shadow border border-slate-800">
-                    Lat: {selectedTelemetryVehicle.lastLocation.lat.toFixed(4)}
-                  </div>
-                </div>
-
-                <div className="z-10 flex justify-between items-end text-[10px] font-mono text-slate-400">
-                  <span>GPS Traced: {selectedTelemetryVehicle.lastLocation.address}</span>
-                  <span className="text-white">{selectedTelemetryVehicle.mileage.toLocaleString()} km</span>
-                </div>
-              </div>
-
-              {/* Engine Metrics & Gauges */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg text-center">
-                  <div className="text-slate-400 text-[10px] font-sans font-medium uppercase">Live Speed</div>
-                  <div className="text-lg font-bold text-slate-800 mt-1 font-mono">{liveSpeed} <span className="text-xs font-normal">km/h</span></div>
-                  <div className="text-[9px] font-mono mt-0.5 text-slate-400">OBD Bus PID 0D</div>
-                </div>
-                <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg text-center">
-                  <div className="text-slate-400 text-[10px] font-sans font-medium uppercase">Engine Speed</div>
-                  <div className="text-lg font-bold text-slate-800 mt-1 font-mono">{liveRpm} <span className="text-xs font-normal">RPM</span></div>
-                  <div className="text-[9px] font-mono mt-0.5 text-slate-400">OBD Bus PID 0C</div>
-                </div>
-                <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg text-center">
-                  <div className="text-slate-400 text-[10px] font-sans font-medium uppercase">Fuel Level</div>
-                  <div className={`text-lg font-bold mt-1 font-mono ${
-                    selectedTelemetryVehicle.fuelLevel < 30 ? 'text-rose-600' : 'text-slate-800'
-                  }`}>{selectedTelemetryVehicle.fuelLevel}%</div>
-                  <div className="text-[9px] font-mono mt-0.5 text-slate-400">PID 2F</div>
-                </div>
-              </div>
-
-              {/* Controller Details */}
-              <div className="p-3 bg-slate-50 border border-slate-150 rounded-lg flex items-center justify-between text-xs font-sans text-slate-600">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${
-                    selectedTelemetryVehicle.obdStatus === 'Healthy' ? 'bg-emerald-500' :
-                    selectedTelemetryVehicle.obdStatus === 'Warning' ? 'bg-amber-500' :
-                    'bg-rose-500'
-                  }`} />
-                  <span>Frequencies Module: <strong className="font-semibold text-slate-800">{selectedTelemetryVehicle.obdStatus} OBD-II</strong></span>
-                </div>
-                <div className="font-mono text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded">
-                  Status: {selectedTelemetryVehicle.status}
-                </div>
-              </div>
-
+                  {vehicles.map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.id === 'V5' ? `⚠️ ${v.model}` : v.model}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
+
+            {selectedTelemetryVehicle && selectedTelemetryVehicle.id ? (
+              /* Simulated Live Display */
+              <div className="mt-5 space-y-4">
+                
+                {/* Styled Mock Vector GPS Map box */}
+                <div className="bg-slate-950 h-44 rounded-xl relative overflow-hidden flex flex-col justify-between p-3 border border-slate-800">
+                  {/* Simulated contour design elements representing street grid */}
+                  <svg className="absolute inset-0 w-full h-full text-slate-900/30 opacity-60" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,20 Q120,40 300,10 M40,0 L80,180 M220,0 L200,180 M0,100 L300,130" stroke="currentColor" strokeWidth="2" fill="none" />
+                    <circle cx="100" cy="50" r="40" stroke="currentColor" strokeWidth="1" strokeDasharray="3" fill="none" />
+                    <circle cx="200" cy="110" r="60" stroke="currentColor" strokeWidth="1" strokeDasharray="3" fill="none" />
+                  </svg>
+
+                  <div className="z-10 flex justify-between items-start">
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono leading-none bg-emerald-500/20 text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        GPS STREAM ACTIVE
+                      </span>
+                      <h4 className="text-white text-xs font-semibold mt-1 font-sans">{selectedTelemetryVehicle.model}</h4>
+                      <span className="text-[10px] text-slate-400 font-mono tracking-tight">{selectedTelemetryVehicle.licensePlate}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded border border-blue-900/40">
+                      Philly Center-City
+                    </span>
+                  </div>
+
+                  {/* Animated Vehicle Location Node on Vector Map */}
+                  <div 
+                    className="absolute transition-all duration-1000 ease-in-out"
+                    style={{ left: `${gpsDotOffset.x}px`, top: `${gpsDotOffset.y}px` }}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-blue-500/40 border border-blue-400 flex items-center justify-center animate-pulse">
+                      <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                    </div>
+                    {selectedTelemetryVehicle.lastLocation && (
+                      <div className="absolute top-4 left-4 bg-slate-900/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap shadow border border-slate-800">
+                        Lat: {selectedTelemetryVehicle.lastLocation.lat.toFixed(4)}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="z-10 flex justify-between items-end text-[10px] font-mono text-slate-400">
+                    <span>GPS Traced: {selectedTelemetryVehicle.lastLocation?.address || 'N/A'}</span>
+                    <span className="text-white">{(selectedTelemetryVehicle.mileage || 0).toLocaleString()} km</span>
+                  </div>
+                </div>
+
+                {/* Engine Metrics & Gauges */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg text-center">
+                    <div className="text-slate-400 text-[10px] font-sans font-medium uppercase">Live Speed</div>
+                    <div className="text-lg font-bold text-slate-800 mt-1 font-mono">{liveSpeed} <span className="text-xs font-normal">km/h</span></div>
+                    <div className="text-[9px] font-mono mt-0.5 text-slate-400">OBD Bus PID 0D</div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg text-center">
+                    <div className="text-slate-405 text-[10px] font-sans font-medium uppercase">Engine Speed</div>
+                    <div className="text-lg font-bold text-slate-800 mt-1 font-mono">{liveRpm} <span className="text-xs font-normal">RPM</span></div>
+                    <div className="text-[9px] font-mono mt-0.5 text-slate-400">OBD Bus PID 0C</div>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg text-center">
+                    <div className="text-slate-440 text-[10px] font-sans font-medium uppercase">Fuel Level</div>
+                    <div className={`text-lg font-bold mt-1 font-mono ${
+                      (selectedTelemetryVehicle.fuelLevel || 0) < 30 ? 'text-rose-600' : 'text-slate-800'
+                    }`}>{selectedTelemetryVehicle.fuelLevel || 0}%</div>
+                    <div className="text-[9px] font-mono mt-0.5 text-slate-400">PID 2F</div>
+                  </div>
+                </div>
+
+                {/* Controller Details */}
+                <div className="p-3 bg-slate-50 border border-slate-150 rounded-lg flex items-center justify-between text-xs font-sans text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${
+                      selectedTelemetryVehicle.obdStatus === 'Healthy' ? 'bg-emerald-500' :
+                      selectedTelemetryVehicle.obdStatus === 'Warning' ? 'bg-amber-500' :
+                      'bg-rose-500'
+                    }`} />
+                    <span>Frequencies Module: <strong className="font-semibold text-slate-800">{selectedTelemetryVehicle.obdStatus || 'N/A'} OBD-II</strong></span>
+                  </div>
+                  <div className="font-mono text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded">
+                    Status: {selectedTelemetryVehicle.status || 'N/A'}
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="mt-5 py-12 flex flex-col items-center justify-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-6 text-center text-slate-400 font-sans">
+                <Car className="w-8 h-8 text-slate-300 stroke-[1.5] mb-2" />
+                <p className="text-xs font-medium">No live telemetry available</p>
+                <p className="text-[10px] text-slate-450 max-w-[200px] mt-1 leading-relaxed">
+                  Add a fleet vehicle or import schema entries page to enable direct real-time OBD status feeds.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

@@ -33,13 +33,7 @@ interface ExternalCharge {
 }
 
 export default function ExternalChargesView() {
-  const [charges, setCharges] = useState<ExternalCharge[]>([
-    { id: 'EC-301', reservationId: '102', customerName: 'Kristian Kutch', chargeType: 'Toll', provider: 'EZPass PA TurnPike', amount: 35.80, incidentDate: '2026-05-28 14:15', status: 'Posted to Contract', notes: 'I-76 Exit 320 to 340' },
-    { id: 'EC-302', reservationId: '104', customerName: 'Dock Turcotte', chargeType: 'Traffic Fine', provider: 'Philly Parking Authority', amount: 76.00, incidentDate: '2026-05-29 11:30', status: 'Draft', notes: 'Expired meter on Arch St' },
-    { id: 'EC-303', reservationId: '101', customerName: 'Sam T. (Recovered)', chargeType: 'Refuel Fee', provider: 'Philly NW Branch Depot', amount: 55.00, incidentDate: '2026-05-30 08:45', status: 'Draft', notes: 'Returned at 45% fuel, contract mandated 85%' },
-    { id: 'EC-304', reservationId: '103', customerName: 'Joanne Reynolds', chargeType: 'Towing', provider: 'S&W Towing & Recovery', amount: 215.00, incidentDate: '2026-05-24 19:20', status: 'Paid by Client', notes: 'Illegally parked near Broad St' },
-    { id: 'EC-305', reservationId: '102', customerName: 'Kristian Kutch', chargeType: 'Cleaning Fine', provider: 'Fishtown Wash Co.', amount: 150.00, incidentDate: '2026-05-28 17:00', status: 'Disputed', notes: 'Severe pet dander and odor - client disputes waiver terms' }
-  ]);
+  const [charges, setCharges] = useState<ExternalCharge[]>([]);
 
   const [activeFilter, setActiveFilter] = useState<'All' | 'Draft' | 'Posted' | 'Paid' | 'Disputed'>('All');
   const [searchTerm, setSearchTerm] = useState('');
