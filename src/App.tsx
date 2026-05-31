@@ -373,7 +373,6 @@ export default function App() {
             vehicles={vehicles} 
             onAddVehicle={handleAddVehicle}
             onUpdateVehicle={handleUpdateVehicle}
-            onDeleteVehicles={handleDeleteVehicles}
             onTriggerImport={() => {
               setImportSchema('vehicles');
               setIsImportModalOpen(true);
