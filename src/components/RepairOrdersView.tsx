@@ -14,7 +14,8 @@ import {
   Building2, 
   ExternalLink,
   DollarSign,
-  Briefcase
+  Briefcase,
+  Trash2
 } from 'lucide-react';
 
 interface RepairOrder {
@@ -40,6 +41,7 @@ export default function RepairOrdersView() {
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
 
   // Form states
@@ -149,16 +151,32 @@ export default function RepairOrdersView() {
       <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
         
         {/* Search header panel */}
-        <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search RO, garage, vehicle..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
-            />
+        <div className="p-4 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full sm:max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+              <input 
+                type="text"
+                placeholder="Search RO, garage, vehicle..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
+              />
+            </div>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected repair orders?`)) {
+                    setOrders(prev => prev.filter(ro => !selectedIds.includes(ro.id)));
+                    setSelectedIds([]);
+                  }
+                }}
+                className="flex items-center gap-1 bg-red-600 text-white px-3.5 py-1.5 text-xs font-sans font-semibold rounded-lg hover:bg-red-700 transition shrink-0 shadow-xs cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Selected ({selectedIds.length})</span>
+              </button>
+            )}
           </div>
           <span className="text-[11px] text-slate-400 font-mono">Dispatch Sync: Direct body integrations</span>
         </div>
@@ -175,6 +193,20 @@ export default function RepairOrdersView() {
             <table className="w-full text-left font-sans">
               <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold border-b border-slate-200 select-none">
                 <tr>
+                  <th className="px-4 py-2.5 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-500 focus:ring-blue-400"
+                      checked={filteredOrders.length > 0 && selectedIds.length === filteredOrders.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(filteredOrders.map(ro => ro.id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="px-4 py-2.5">RO ID</th>
                   <th className="px-4 py-2.5">Linked Claim</th>
                   <th className="px-4 py-2.5">Odometer Plate ID</th>
@@ -189,6 +221,20 @@ export default function RepairOrdersView() {
               <tbody className="text-xs text-slate-600 divide-y divide-slate-100 select-none">
                 {filteredOrders.map(ro => (
                   <tr key={ro.id} className="hover:bg-slate-50/50 transition">
+                    <td className="px-4 py-4 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-505" 
+                        checked={selectedIds.includes(ro.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, ro.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== ro.id));
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-4 font-mono font-bold text-slate-500">{ro.id}</td>
                     <td className="px-4 py-4 font-mono text-slate-400">
                       {ro.claimId ? (

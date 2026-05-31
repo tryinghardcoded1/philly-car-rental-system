@@ -27,6 +27,7 @@ interface ClaimsViewProps {
   reservations: Reservation[];
   onAddClaim: (c: InsuranceClaim) => void;
   onUpdateClaim: (updated: InsuranceClaim) => void;
+  onDeleteClaims?: (ids: string[]) => void;
 }
 
 export default function ClaimsView({ 
@@ -34,11 +35,13 @@ export default function ClaimsView({
   vehicles, 
   reservations, 
   onAddClaim, 
-  onUpdateClaim 
+  onUpdateClaim,
+  onDeleteClaims
 }: ClaimsViewProps) {
   const [selectedClaim, setSelectedClaim] = useState<InsuranceClaim>(claims[0] || {} as InsuranceClaim);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Correspondence state
   const [operatorMsg, setOperatorMsg] = useState('');
@@ -186,10 +189,28 @@ export default function ClaimsView({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Side Claims List - 5 spans */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-bold font-sans text-slate-900">Incident Logs</h3>
-            <p className="text-xs text-slate-400 font-sans">Index of filed reports and adjuster assignments.</p>
+        {/* We adjusted classes previously */}
+        
+        {/* Left Side Claims List - 5 spans */}
+        <div className="lg:col-span-12 xl:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold font-sans text-slate-900">Incident Logs</h3>
+              <p className="text-xs text-slate-400 font-sans">Index of filed reports and adjuster assignments.</p>
+            </div>
+            {selectedIds.length > 0 && onDeleteClaims && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected claims?`)) {
+                    onDeleteClaims(selectedIds);
+                    setSelectedIds([]);
+                  }
+                }}
+                className="text-xs font-bold text-red-600 hover:underline cursor-pointer"
+              >
+                Delete Selected ({selectedIds.length})
+              </button>
+            )}
           </div>
 
           <div className="relative">
@@ -205,36 +226,54 @@ export default function ClaimsView({
 
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
             {filteredClaims.map(claim => (
-              <button
+              <div
                 key={claim.id}
-                onClick={() => setSelectedClaim(claim)}
-                className={`w-full text-left p-4 rounded-xl border transition flex flex-col gap-2 ${
+                className={`w-full p-4 rounded-xl border transition flex items-center gap-3 relative ${
                   selectedClaim.id === claim.id 
                     ? 'bg-blue-50/40 border-blue-400 shadow-xs' 
                     : 'bg-white hover:bg-slate-50 border-slate-200'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-slate-800">{claim.claimNumber}</span>
-                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border ${
-                    claim.claimResolutionStatus === 'Settled' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                    claim.claimResolutionStatus === 'Pending Adjuster' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                    'bg-slate-50 text-slate-600 border-slate-200'
-                  }`}>
-                    {claim.claimResolutionStatus}
-                  </span>
-                </div>
+                <input 
+                  type="checkbox"
+                  checked={selectedIds.includes(claim.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    if (e.target.checked) {
+                      setSelectedIds(prev => [...prev, claim.id]);
+                    } else {
+                      setSelectedIds(prev => prev.filter(id => id !== claim.id));
+                    }
+                  }}
+                  className="rounded text-blue-500 focus:ring-blue-450 z-10 cursor-pointer shrink-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedClaim(claim)}
+                  className="flex-1 text-left flex flex-col gap-2 focus:outline-none"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-mono text-xs font-bold text-slate-800">{claim.claimNumber}</span>
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border ${
+                      claim.claimResolutionStatus === 'Settled' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      claim.claimResolutionStatus === 'Pending Adjuster' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}>
+                      {claim.claimResolutionStatus}
+                    </span>
+                  </div>
 
-                <div className="text-xs font-sans text-slate-600">
-                  <div>Model: <strong className="text-slate-800">{claim.vehicleModel}</strong></div>
-                  <div>Renter: <strong className="text-slate-800">{claim.customerName}</strong></div>
-                </div>
+                  <div className="text-xs font-sans text-slate-600">
+                    <div>Model: <strong className="text-slate-800">{claim.vehicleModel}</strong></div>
+                    <div>Renter: <strong className="text-slate-800">{claim.customerName}</strong></div>
+                  </div>
 
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-100/60">
-                  <span>Reported: {claim.reportedDate}</span>
-                  <span className="font-semibold text-slate-700">${claim.estimatedDamageAmount.toFixed(2)}</span>
-                </div>
-              </button>
+                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-100/60 w-full">
+                    <span>Reported: {claim.reportedDate}</span>
+                    <span className="font-semibold text-slate-700">${claim.estimatedDamageAmount.toFixed(2)}</span>
+                  </div>
+                </button>
+              </div>
             ))}
           </div>
         </div>

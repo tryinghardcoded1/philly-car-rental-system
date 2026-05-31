@@ -39,6 +39,7 @@ export default function CommissionPartnersView() {
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   
   // New partner state
@@ -142,16 +143,32 @@ export default function CommissionPartnersView() {
       <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
         
         {/* Search header panel */}
-        <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search partner networks..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
-            />
+        <div className="p-4 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full sm:max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+              <input 
+                type="text"
+                placeholder="Search partner networks..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
+              />
+            </div>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected commission partners?`)) {
+                    setPartners(prev => prev.filter(p => !selectedIds.includes(p.id)));
+                    setSelectedIds([]);
+                  }
+                }}
+                className="flex items-center gap-1 bg-red-600 text-white px-3.5 py-1.5 text-xs font-sans font-semibold rounded-lg hover:bg-red-700 transition shrink-0 shadow-xs cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Selected ({selectedIds.length})</span>
+              </button>
+            )}
           </div>
           <span className="text-[11px] text-slate-400 font-mono font-medium">Reconciliation Cycle: Monthly Automated API feeds</span>
         </div>
@@ -168,6 +185,20 @@ export default function CommissionPartnersView() {
             <table className="w-full text-left">
               <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold border-b border-slate-200 select-none">
                 <tr>
+                  <th className="px-4 py-2.5 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-500 focus:ring-blue-400"
+                      checked={filteredPartners.length > 0 && selectedIds.length === filteredPartners.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(filteredPartners.map(p => p.id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="px-4 py-2.5">Partner ID</th>
                   <th className="px-4 py-2.5">Corporate Name</th>
                   <th className="px-4 py-2.5">Promo / Agency Code</th>
@@ -182,6 +213,20 @@ export default function CommissionPartnersView() {
               <tbody className="text-xs text-slate-600 divide-y divide-slate-100 select-none">
                 {filteredPartners.map(p => (
                   <tr key={p.id} className="hover:bg-slate-50/50 transition">
+                    <td className="px-4 py-3.5 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-505" 
+                        checked={selectedIds.includes(p.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, p.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== p.id));
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-3.5 font-mono text-slate-400 font-semibold">{p.id}</td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">

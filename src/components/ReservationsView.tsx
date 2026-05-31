@@ -25,6 +25,7 @@ interface ReservationsViewProps {
   onAddReservation: (res: Reservation) => void;
   onUpdateStatus: (id: string, newStatus: any) => void;
   onDeleteReservation: (id: string) => void;
+  onDeleteReservations: (ids: string[]) => void;
   onTriggerImport?: () => void;
 }
 
@@ -34,11 +35,13 @@ export default function ReservationsView({
   onAddReservation,
   onUpdateStatus,
   onDeleteReservation,
+  onDeleteReservations,
   onTriggerImport
 }: ReservationsViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'All' | 'TodayReturns' | 'TomorrowPickups' | 'TodayPickups' | 'OnRent' | 'Completed' | 'Cancelled' | 'Outstanding'>('All');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // New reservation form state
   const [newCustName, setNewCustName] = useState('');
@@ -204,8 +207,8 @@ export default function ReservationsView({
       </div>
 
       {/* Filter and Live search box */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row gap-3 items-center">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4.5 h-4.5" />
           <input
             type="text"
@@ -215,7 +218,21 @@ export default function ReservationsView({
             className="w-full bg-white pl-10 pr-4 py-2.5 text-sm font-sans rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 shrink-0">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={() => {
+                if (confirm(`Delete the ${selectedIds.length} selected reservations?`)) {
+                  onDeleteReservations(selectedIds);
+                  setSelectedIds([]);
+                }
+              }}
+              className="flex items-center gap-1 bg-red-650 text-white px-3.5 py-2 text-xs font-sans font-semibold rounded-lg hover:bg-red-750 transition shadow-sm cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Selected ({selectedIds.length})</span>
+            </button>
+          )}
           <span className="text-xs text-slate-400 font-mono">Count: {filteredList.length}</span>
         </div>
       </div>
@@ -226,7 +243,18 @@ export default function ReservationsView({
           <thead>
             <tr className="bg-slate-50/75 text-slate-500 border-b border-slate-200 text-xs font-bold font-sans uppercase tracking-wider">
               <th className="py-3 px-4 w-12 text-center">
-                <input type="checkbox" className="rounded text-blue-500 focus:ring-blue-400" defaultChecked />
+                <input 
+                  type="checkbox" 
+                  className="rounded text-blue-500 focus:ring-blue-400" 
+                  checked={filteredList.length > 0 && selectedIds.length === filteredList.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds(filteredList.map(r => r.id));
+                    } else {
+                      setSelectedIds([]);
+                    }
+                  }}
+                />
               </th>
               <th className="py-3 px-3 w-16">#</th>
               <th className="py-3 px-4">Customer</th>
@@ -257,7 +285,18 @@ export default function ReservationsView({
                 return (
                   <tr key={res.id} className="hover:bg-slate-50/50 transition duration-150 align-middle">
                     <td className="py-3.5 px-4 text-center">
-                      <input type="checkbox" className="rounded text-blue-500 focus:ring-blue-500" defaultChecked />
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-500 focus:ring-blue-500" 
+                        checked={selectedIds.includes(res.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, res.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== res.id));
+                          }
+                        }}
+                      />
                     </td>
                     <td className="py-3.5 px-3 font-mono text-xs text-slate-400">
                       {res.id}

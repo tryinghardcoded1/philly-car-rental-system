@@ -12,7 +12,8 @@ import {
   Coins, 
   FileCheck2,
   RefreshCw,
-  TrendingDown
+  TrendingDown,
+  Trash2
 } from 'lucide-react';
 
 interface CommissionLedger {
@@ -38,6 +39,7 @@ export default function CommissionsView() {
 
   const [activeTab, setActiveTab] = useState<'All' | 'Accrued' | 'Settled' | 'Disputed' | 'Waived'>('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filteredLedgers = ledgers.filter(l => {
     if (activeTab === 'Accrued' && l.reconciliationStatus !== 'Accrued') return false;
@@ -145,15 +147,31 @@ export default function CommissionsView() {
             ))}
           </div>
 
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search by broker or res ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
-            />
+          <div className="flex items-center gap-3 w-full md:max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+              <input 
+                type="text"
+                placeholder="Search by broker or res ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
+              />
+            </div>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected commission ledgers?`)) {
+                    setLedgers(prev => prev.filter(l => !selectedIds.includes(l.id)));
+                    setSelectedIds([]);
+                  }
+                }}
+                className="flex items-center gap-1 bg-red-600 text-white px-3.5 py-1.5 text-xs font-sans font-semibold rounded-lg hover:bg-red-700 transition shrink-0 shadow-xs cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Selected ({selectedIds.length})</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -169,6 +187,20 @@ export default function CommissionsView() {
             <table className="w-full text-left">
               <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold border-b border-slate-200 select-none">
                 <tr>
+                  <th className="px-4 py-2.5 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-500 focus:ring-blue-400"
+                      checked={filteredLedgers.length > 0 && selectedIds.length === filteredLedgers.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(filteredLedgers.map(l => l.id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="px-4 py-2.5">Accrual ID</th>
                   <th className="px-4 py-2.5">Reservation Link</th>
                   <th className="px-4 py-2.5">Referring Broker Affiliate</th>
@@ -183,6 +215,20 @@ export default function CommissionsView() {
               <tbody className="text-xs text-slate-600 divide-y divide-slate-100 select-none">
                 {filteredLedgers.map(l => (
                   <tr key={l.id} className="hover:bg-slate-50/55 transition">
+                    <td className="px-4 py-3.5 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-505" 
+                        checked={selectedIds.includes(l.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, l.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== l.id));
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-3.5 font-mono text-slate-500">{l.id}</td>
                     <td className="px-4 py-3.5 font-mono font-bold text-slate-800">#{l.reservationId}</td>
                     <td className="px-4 py-3.5">

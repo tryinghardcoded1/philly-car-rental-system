@@ -19,6 +19,7 @@ interface QuotesViewProps {
   quotes: Quote[];
   onAddQuote: (q: Quote) => void;
   onDeleteQuote: (id: string) => void;
+  onDeleteQuotes?: (ids: string[]) => void;
   onApproveQuote: (id: string) => void;
 }
 
@@ -26,10 +27,12 @@ export default function QuotesView({
   quotes, 
   onAddQuote, 
   onDeleteQuote, 
+  onDeleteQuotes,
   onApproveQuote 
 }: QuotesViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Form states
   const [custName, setCustName] = useState('');
@@ -125,6 +128,20 @@ export default function QuotesView({
             className="w-full bg-white pl-10 pr-4 py-2.5 text-sm font-sans rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
           />
         </div>
+        {selectedIds.length > 0 && onDeleteQuotes && (
+          <button
+            onClick={() => {
+              if (confirm(`Delete the ${selectedIds.length} selected quotes?`)) {
+                onDeleteQuotes(selectedIds);
+                setSelectedIds([]);
+              }
+            }}
+            className="flex items-center gap-1.5 bg-red-600 text-white px-3.5 py-2 text-xs font-sans font-semibold rounded-lg hover:bg-red-700 transition shadow-sm cursor-pointer whitespace-nowrap"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete Selected ({selectedIds.length})</span>
+          </button>
+        )}
       </div>
 
       {/* Table grid matching screenshot 4 */}
@@ -133,7 +150,18 @@ export default function QuotesView({
           <thead>
             <tr className="bg-slate-50/75 text-slate-500 border-b border-slate-200 text-xs font-bold font-sans uppercase tracking-wider">
               <th className="py-3 px-4 w-12 text-center">
-                <input type="checkbox" className="rounded text-blue-500" />
+                <input 
+                  type="checkbox" 
+                  className="rounded text-blue-500 focus:ring-blue-400"
+                  checked={filteredQuotes.length > 0 && selectedIds.length === filteredQuotes.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds(filteredQuotes.map(q => q.id));
+                    } else {
+                      setSelectedIds([]);
+                    }
+                  }}
+                />
               </th>
               <th className="py-3 px-3 w-16">#</th>
               <th className="py-3 px-4">Reservation Type</th>
@@ -165,7 +193,18 @@ export default function QuotesView({
               filteredQuotes.map((q) => (
                 <tr key={q.id} className="hover:bg-slate-50/50 transition">
                   <td className="py-3 px-4 text-center">
-                    <input type="checkbox" className="rounded text-blue-500" />
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-500 focus:ring-blue-550"
+                      checked={selectedIds.includes(q.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(prev => [...prev, q.id]);
+                        } else {
+                          setSelectedIds(prev => prev.filter(id => id !== q.id));
+                        }
+                      }}
+                    />
                   </td>
                   <td className="py-3 px-3 font-mono text-xs text-slate-400 font-semibold">{q.id}</td>
                   <td className="py-3 px-4 font-medium text-slate-700">{q.reservationType}</td>

@@ -72,7 +72,44 @@ export default function App() {
   const [payments, setPayments] = useState<Payment[]>(INITIAL_PAYMENTS);
   const [fines, setFines] = useState<Fine[]>(INITIAL_FINES);
   const [claims, setClaims] = useState<InsuranceClaim[]>(INITIAL_CLAIMS);
-  const [rates] = useState<RateItem[]>(INITIAL_RATES);
+  const [rates, setRates] = useState<RateItem[]>(INITIAL_RATES);
+
+  // Bulk Deletions
+  const handleDeleteReservations = (ids: string[]) => {
+    setReservations(prev => prev.filter(r => !ids.includes(r.id)));
+  };
+
+  const handleDeleteAttempts = (ids: string[]) => {
+    setAttempts(prev => prev.filter(a => !ids.includes(a.id)));
+  };
+
+  const handleDeleteQuotes = (ids: string[]) => {
+    setQuotes(prev => prev.filter(q => !ids.includes(q.id)));
+  };
+
+  const handleDeletePayments = (ids: string[]) => {
+    setPayments(prev => prev.filter(p => !ids.includes(p.id)));
+  };
+
+  const handleDeleteFines = (ids: string[]) => {
+    setFines(prev => prev.filter(f => !ids.includes(f.id)));
+  };
+
+  const handleDeleteVehicles = (ids: string[]) => {
+    setVehicles(prev => prev.filter(v => !ids.includes(v.id)));
+  };
+
+  const handleDeleteClaims = (ids: string[]) => {
+    setClaims(prev => prev.filter(c => !ids.includes(c.id)));
+  };
+
+  const handleDeleteRates = (ids: string[]) => {
+    setRates(prev => prev.filter(r => !ids.includes(r.id)));
+  };
+
+  const handleDeleteCustomers = (ids: string[]) => {
+    setCustomers(prev => prev.filter(c => !ids.includes(c.id)));
+  };
 
   // Mutators and Callback handlers
 
@@ -279,6 +316,7 @@ export default function App() {
             onAddReservation={handleAddReservation}
             onUpdateStatus={handleUpdateReservationStatus}
             onDeleteReservation={handleDeleteReservation}
+            onDeleteReservations={handleDeleteReservations}
             onTriggerImport={() => {
               setImportSchema('reservations');
               setIsImportModalOpen(true);
@@ -291,6 +329,7 @@ export default function App() {
             attempts={attempts} 
             onConvertToReservation={handleConvertAttemptToReservation}
             onUpdateStatus={handleUpdateAttemptStatus}
+            onDeleteAttempts={handleDeleteAttempts}
           />
         );
       case 'quotes':
@@ -299,6 +338,7 @@ export default function App() {
             quotes={quotes}
             onAddQuote={handleAddQuote}
             onDeleteQuote={handleDeleteQuote}
+            onDeleteQuotes={handleDeleteQuotes}
             onApproveQuote={handleApproveQuote}
           />
         );
@@ -308,6 +348,7 @@ export default function App() {
             payments={payments} 
             reservations={reservations}
             onAddPayment={handleAddPayment}
+            onDeletePayments={handleDeletePayments}
           />
         );
       case 'fines':
@@ -319,6 +360,7 @@ export default function App() {
             onAddFine={handleAddFine}
             onUpdatePaidStatus={handleUpdateFinePaidStatus}
             onDeleteFine={handleDeleteFine}
+            onDeleteFines={handleDeleteFines}
             onTriggerImport={() => {
               setImportSchema('fines');
               setIsImportModalOpen(true);
@@ -331,6 +373,7 @@ export default function App() {
             vehicles={vehicles} 
             onAddVehicle={handleAddVehicle}
             onUpdateVehicle={handleUpdateVehicle}
+            onDeleteVehicles={handleDeleteVehicles}
             onTriggerImport={() => {
               setImportSchema('vehicles');
               setIsImportModalOpen(true);
@@ -345,11 +388,15 @@ export default function App() {
             reservations={reservations}
             onAddClaim={handleAddClaim}
             onUpdateClaim={handleUpdateClaim}
+            onDeleteClaims={handleDeleteClaims}
           />
         );
       case 'rates':
         return (
-          <RatesView rates={rates} />
+          <RatesView 
+            rates={rates} 
+            onDeleteRates={handleDeleteRates}
+          />
         );
       case 'booking':
         return (
@@ -365,6 +412,7 @@ export default function App() {
             customers={customers}
             onAddCustomer={handleAddCustomer}
             onDeleteCustomer={handleDeleteCustomer}
+            onDeleteCustomers={handleDeleteCustomers}
             onUpdateCustomer={handleUpdateCustomer}
             onTriggerImport={() => {
               setImportSchema('customers');

@@ -16,7 +16,8 @@ import {
   FileMinus,
   Sparkles,
   RefreshCw,
-  Stamp
+  Stamp,
+  Trash2
 } from 'lucide-react';
 
 interface ExternalCharge {
@@ -42,6 +43,7 @@ export default function ExternalChargesView() {
 
   const [activeFilter, setActiveFilter] = useState<'All' | 'Draft' | 'Posted' | 'Paid' | 'Disputed'>('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   // Create charge form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -175,15 +177,31 @@ export default function ExternalChargesView() {
             ))}
           </div>
 
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search by customer, tollway, ticket ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
-            />
+          <div className="flex items-center gap-3 w-full md:max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+              <input 
+                type="text"
+                placeholder="Search by customer, tollway, ticket ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
+              />
+            </div>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected external surcharges?`)) {
+                    setCharges(prev => prev.filter(c => !selectedIds.includes(c.id)));
+                    setSelectedIds([]);
+                  }
+                }}
+                className="flex items-center gap-1 bg-red-600 text-white px-3.5 py-1.5 text-xs font-sans font-semibold rounded-lg hover:bg-red-700 transition shrink-0 shadow-xs cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete ({selectedIds.length})</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -199,6 +217,20 @@ export default function ExternalChargesView() {
             <table className="w-full text-left">
               <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold border-b border-slate-200 select-none">
                 <tr>
+                  <th className="px-4 py-2.5 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-500 focus:ring-blue-400"
+                      checked={filteredCharges.length > 0 && selectedIds.length === filteredCharges.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(filteredCharges.map(c => c.id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="px-4 py-2.5">Surcharge ID</th>
                   <th className="px-4 py-2.5">Contract/Res ID</th>
                   <th className="px-4 py-2.5">Client & Recipient</th>
@@ -213,6 +245,20 @@ export default function ExternalChargesView() {
               <tbody className="text-xs text-slate-600 divide-y divide-slate-100 select-none">
                 {filteredCharges.map(charge => (
                   <tr key={charge.id} className="hover:bg-slate-50/50 transition">
+                    <td className="px-4 py-3 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-505" 
+                        checked={selectedIds.includes(charge.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, charge.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== charge.id));
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-3 font-mono font-bold text-slate-500">
                       {charge.id}
                     </td>

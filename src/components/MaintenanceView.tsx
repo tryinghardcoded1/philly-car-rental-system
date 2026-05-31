@@ -14,7 +14,8 @@ import {
   DollarSign,
   Briefcase,
   Layers,
-  Sparkles
+  Sparkles,
+  Trash2
 } from 'lucide-react';
 
 interface MaintInspection {
@@ -41,6 +42,7 @@ export default function MaintenanceView() {
 
   const [activeFilter, setActiveFilter] = useState<'All' | 'Scheduled' | 'Due' | 'Overdue'>('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
 
   // Form State
@@ -168,15 +170,31 @@ export default function MaintenanceView() {
             ))}
           </div>
 
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Search by model, license plate..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
-            />
+          <div className="flex items-center gap-3 w-full md:max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
+              <input 
+                type="text"
+                placeholder="Search by model, license plate..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-white border border-slate-200 pl-9 pr-4 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-450 text-slate-700"
+              />
+            </div>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected maintenance logs?`)) {
+                    setInspections(prev => prev.filter(ins => !selectedIds.includes(ins.id)));
+                    setSelectedIds([]);
+                  }
+                }}
+                className="flex items-center gap-1 bg-red-600 text-white px-3.5 py-1.5 text-xs font-sans font-semibold rounded-lg hover:bg-red-700 transition shrink-0 shadow-xs cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Selected ({selectedIds.length})</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -192,6 +210,20 @@ export default function MaintenanceView() {
             <table className="w-full text-left">
               <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 font-bold border-b border-slate-200 select-none">
                 <tr>
+                  <th className="px-4 py-2.5 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-500 focus:ring-blue-400"
+                      checked={filteredInspec.length > 0 && selectedIds.length === filteredInspec.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(filteredInspec.map(ins => ins.id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="px-4 py-2.5">Schedule ID</th>
                   <th className="px-4 py-2.5">Vehicle License</th>
                   <th className="px-4 py-2.5">Model</th>
@@ -206,6 +238,20 @@ export default function MaintenanceView() {
               <tbody className="text-xs text-slate-600 divide-y divide-slate-100 select-none">
                 {filteredInspec.map(item => (
                   <tr key={item.id} className="hover:bg-slate-50/50 transition">
+                    <td className="px-4 py-3.5 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-505" 
+                        checked={selectedIds.includes(item.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, item.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== item.id));
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-3.5 font-mono text-slate-500">{item.id}</td>
                     <td className="px-4 py-3.5 font-mono font-bold text-slate-700">{item.vehiclePlate}</td>
                     <td className="px-4 py-3.5">

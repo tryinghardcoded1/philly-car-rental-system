@@ -24,6 +24,7 @@ interface CustomerViewProps {
   customers: Customer[];
   onAddCustomer: (c: Customer) => void;
   onDeleteCustomer: (id: string) => void;
+  onDeleteCustomers?: (ids: string[]) => void;
   onUpdateCustomer: (updated: Customer) => void;
   onTriggerImport?: () => void;
 }
@@ -32,12 +33,14 @@ export default function CustomerView({
   customers, 
   onAddCustomer, 
   onDeleteCustomer, 
+  onDeleteCustomers,
   onUpdateCustomer,
   onTriggerImport
 }: CustomerViewProps) {
   const [selectedCust, setSelectedCust] = useState<Customer>(customers[0] || {} as Customer);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Form state
   const [name, setName] = useState('');
@@ -163,10 +166,25 @@ export default function CustomerView({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* CRM list: 5 columns */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-bold font-sans text-slate-900">CRM Directory</h3>
-            <p className="text-xs text-slate-400 font-sans">Real-time driver credentials search.</p>
+        <div className="lg:col-span-12 xl:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold font-sans text-slate-900">CRM Directory</h3>
+              <p className="text-xs text-slate-400 font-sans">Real-time driver credentials search.</p>
+            </div>
+            {selectedIds.length > 0 && onDeleteCustomers && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected customers?`)) {
+                    onDeleteCustomers(selectedIds);
+                    setSelectedIds([]);
+                  }
+                }}
+                className="text-xs font-bold text-red-600 hover:underline cursor-pointer"
+              >
+                Delete Selected ({selectedIds.length})
+              </button>
+            )}
           </div>
 
           <div className="relative">
@@ -182,25 +200,43 @@ export default function CustomerView({
 
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
             {filteredCustomers.map(cust => (
-              <button
+              <div
                 key={cust.id}
-                onClick={() => setSelectedCust(cust)}
-                className={`w-full text-left p-4 rounded-xl border transition flex items-center justify-between gap-3 ${
+                className={`w-full p-4 rounded-xl border transition flex items-center gap-3 relative ${
                   selectedCust.id === cust.id 
                     ? 'bg-blue-50/40 border-blue-400 shadow-xs' 
                     : 'bg-white hover:bg-slate-50 border-slate-200'
                 }`}
               >
-                <div>
-                  <h4 className="font-bold text-slate-900 text-sm font-sans">{cust.name}</h4>
-                  <span className="text-[10px] font-mono text-slate-400 font-medium">{cust.driverLicense}</span>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
-                    Active
-                  </span>
-                </div>
-              </button>
+                <input 
+                  type="checkbox"
+                  checked={selectedIds.includes(cust.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    if (e.target.checked) {
+                      setSelectedIds(prev => [...prev, cust.id]);
+                    } else {
+                      setSelectedIds(prev => prev.filter(id => id !== cust.id));
+                    }
+                  }}
+                  className="rounded text-blue-505 focus:ring-blue-450 z-10 cursor-pointer shrink-0"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedCust(cust)}
+                  className="flex-1 text-left flex items-center justify-between gap-3 focus:outline-none"
+                >
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm font-sans">{cust.name}</h4>
+                    <span className="text-[10px] font-mono text-slate-400 font-medium">{cust.driverLicense}</span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                      Active
+                    </span>
+                  </div>
+                </button>
+              </div>
             ))}
           </div>
         </div>

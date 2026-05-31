@@ -3,17 +3,19 @@
  */
 
 import React, { useState } from 'react';
-import { DollarSign, Sliders, Calculator, Tag, Percent, CheckCircle } from 'lucide-react';
+import { DollarSign, Sliders, Calculator, Tag, Percent, CheckCircle, Trash2 } from 'lucide-react';
 import { RateItem } from '../types';
 
 interface RatesViewProps {
   rates: RateItem[];
+  onDeleteRates?: (ids: string[]) => void;
 }
 
-export default function RatesView({ rates }: RatesViewProps) {
+export default function RatesView({ rates, onDeleteRates }: RatesViewProps) {
   const [testDays, setTestDays] = useState(7);
   const [testClass, setTestClass] = useState(rates[1]?.vehicleClass || 'Premium');
   const [isWeekend, setIsWeekend] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Simple calculator matching logic
   const selectedRate = rates.find(r => r.vehicleClass === testClass) || rates[0];
@@ -37,15 +39,45 @@ export default function RatesView({ rates }: RatesViewProps) {
         
         {/* Dynamic pricing multipliers list */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <Sliders className="w-5 h-5 text-blue-600" />
-            <h3 className="font-bold text-base text-slate-900 font-sans">Seasonal Category Matrix</h3>
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Sliders className="w-5 h-5 text-blue-600" />
+              <h3 className="font-bold text-base text-slate-900 font-sans">Seasonal Category Matrix</h3>
+            </div>
+            {selectedIds.length > 0 && onDeleteRates && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected rate configurations?`)) {
+                    onDeleteRates(selectedIds);
+                    setSelectedIds([]);
+                  }
+                }}
+                className="flex items-center gap-1 bg-red-600 text-white px-2.5 py-1 text-xs font-sans font-semibold rounded-lg hover:bg-red-700 transition"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Delete Selected ({selectedIds.length})</span>
+              </button>
+            )}
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider font-sans border-b border-slate-100 pb-2">
+                  <th className="py-2.5 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="rounded text-blue-500 focus:ring-blue-400"
+                      checked={rates.length > 0 && selectedIds.length === rates.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(rates.map(r => r.id));
+                        } else {
+                          setSelectedIds([]);
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="py-2.5">Vehicle Category</th>
                   <th className="py-2.5 text-right font-mono">Daily Rate (Mon-Thu)</th>
                   <th className="py-2.5 text-right font-mono">Weekend Rate (Fri-Sun)</th>
@@ -56,6 +88,20 @@ export default function RatesView({ rates }: RatesViewProps) {
               <tbody className="divide-y divide-slate-100 font-sans text-sm text-slate-700">
                 {rates.map(r => (
                   <tr key={r.id} className="hover:bg-slate-50/50 transition">
+                    <td className="py-3.5 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded text-blue-505" 
+                        checked={selectedIds.includes(r.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(prev => [...prev, r.id]);
+                          } else {
+                            setSelectedIds(prev => prev.filter(id => id !== r.id));
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="py-3.5 font-semibold text-slate-900">{r.vehicleClass}</td>
                     <td className="py-3.5 text-right font-mono text-slate-800">${r.baseDailyRate.toFixed(2)}/day</td>
                     <td className="py-3.5 text-right font-mono text-slate-800">${r.weekendRate.toFixed(2)}/day</td>

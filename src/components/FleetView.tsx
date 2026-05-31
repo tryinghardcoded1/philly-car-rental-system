@@ -26,12 +26,14 @@ interface FleetViewProps {
   vehicles: Vehicle[];
   onAddVehicle: (v: Vehicle) => void;
   onUpdateVehicle: (updated: Vehicle) => void;
+  onDeleteVehicles?: (ids: string[]) => void;
   onTriggerImport?: () => void;
 }
 
-export default function FleetView({ vehicles, onAddVehicle, onUpdateVehicle, onTriggerImport }: FleetViewProps) {
+export default function FleetView({ vehicles, onAddVehicle, onUpdateVehicle, onDeleteVehicles, onTriggerImport }: FleetViewProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle>(vehicles[0] || {} as Vehicle);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Form states
   const [model, setModel] = useState('');
@@ -115,39 +117,72 @@ export default function FleetView({ vehicles, onAddVehicle, onUpdateVehicle, onT
         
         {/* Left column: List of Fleet members */}
         <div className="lg:col-span-1 space-y-3">
-          <h3 className="text-xs font-bold font-sans text-slate-400 uppercase tracking-widest pl-1">Operational Fleet Registry</h3>
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-xs font-bold font-sans text-slate-400 uppercase tracking-widest">Operational Fleet Registry</h3>
+            {selectedIds.length > 0 && onDeleteVehicles && (
+              <button
+                onClick={() => {
+                  if (confirm(`Delete the ${selectedIds.length} selected fleet vehicles?`)) {
+                    onDeleteVehicles(selectedIds);
+                    setSelectedIds([]);
+                  }
+                }}
+                className="text-xs font-bold text-red-600 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Delete Selected ({selectedIds.length})</span>
+              </button>
+            )}
+          </div>
           <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
             {vehicles.map(v => (
-              <button
+              <div
                 key={v.id}
-                onClick={() => setSelectedVehicle(v)}
-                className={`w-full text-left p-4 rounded-xl border transition flex items-center justify-between gap-3 ${
+                className={`w-full p-4 rounded-xl border transition flex items-center gap-3 relative ${
                   selectedVehicle.id === v.id 
                     ? 'bg-blue-50/50 border-blue-500 shadow-sm' 
                     : 'bg-white hover:bg-slate-50 border-slate-200'
                 }`}
               >
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm font-sans">{v.model}</h4>
-                  <span className="text-[10px] font-mono text-slate-400 font-medium tracking-tight uppercase block">{v.licensePlate} • {v.vehicleClass}</span>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                    v.status === 'Available' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                    v.status === 'Rented' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                    v.status === 'Maintenance' ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' :
-                    'bg-slate-50 text-slate-500 border-slate-200'
-                  }`}>
-                    {v.status}
-                  </span>
-                  <span className={`text-[9px] font-mono block mt-1 ${
-                    v.obdStatus === 'Healthy' ? 'text-emerald-500' :
-                    v.obdStatus === 'Warning' ? 'text-amber-500' : 'text-rose-500'
-                  }`}>
-                    {v.obdStatus === 'Healthy' ? 'OBD Clear' : `OBD ${v.obdStatus}`}
-                  </span>
-                </div>
-              </button>
+                <input 
+                  type="checkbox"
+                  checked={selectedIds.includes(v.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    if (e.target.checked) {
+                      setSelectedIds(prev => [...prev, v.id]);
+                    } else {
+                      setSelectedIds(prev => prev.filter(id => id !== v.id));
+                    }
+                  }}
+                  className="rounded text-blue-500 focus:ring-blue-400 z-10 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedVehicle(v)}
+                  className="flex-1 text-left flex items-center justify-between gap-3 focus:outline-none"
+                >
+                  <div>
+                    <h4 className="font-semibold text-slate-900 text-sm font-sans">{v.model}</h4>
+                    <span className="text-[10px] font-mono text-slate-400 font-medium tracking-tight uppercase block">{v.licensePlate} • {v.vehicleClass}</span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                      v.status === 'Available' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      v.status === 'Rented' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      v.status === 'Maintenance' ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' :
+                      'bg-slate-50 text-slate-500 border-slate-200'
+                    }`}>
+                      {v.status}
+                    </span>
+                    <span className={`text-[9px] font-mono block mt-1 ${
+                      v.obdStatus === 'Healthy' ? 'text-emerald-500' :
+                      v.obdStatus === 'Warning' ? 'text-amber-500' : 'text-rose-500'
+                    }`}>
+                      {v.obdStatus === 'Healthy' ? 'OBD Clear' : `OBD ${v.obdStatus}`}
+                    </span>
+                  </div>
+                </button>
+              </div>
             ))}
           </div>
         </div>
