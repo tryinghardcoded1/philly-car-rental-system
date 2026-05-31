@@ -1,0 +1,8 @@
+{
+  "name": "Philly Car Rental",
+  "description": "A premium, comprehensive SaaS dashboard for Philly Car Rental's fleet tracking, reservations, claims, CRM analytics, and billing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
